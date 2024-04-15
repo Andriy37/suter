@@ -1,6 +1,8 @@
 from typing import Any
 from pygame import *
 from random import randint
+from time import time as timer
+
 mixer.init()
 mixer.music.load('space.ogg')
 fire_sound = mixer.Sound('fire.ogg')
@@ -13,7 +15,11 @@ img_fire = "bullet.png"
 window = display.set_mode((700,500))
 
 font.init()
-font1 = font.Font(None,36)
+font2 = font.Font(None, 80)
+font1 = font.Font(None, 36)
+win = font2.render('YOU WIN!!!!!!!', True, (255, 255, 255))
+luse = font2.render('YOU luse!!!!!!', True, (100, 0, 0))
+
 score = 0
 lost = 0
 
@@ -77,14 +83,26 @@ for i in range(1,6):
 run = True
 finish = False
 
+num_fire = 0 
+rel_time = False
+
+
+
 while run:
     for e in event.get():
         if e.type == QUIT:
             run = False
         elif e.type == KEYDOWN:
             if e.key == K_SPACE:
-                ship.fire()
-                
+                if num_fire <5 and rel_time == False:
+                    num_fire = num_fire+1
+                    ship.fire()
+
+                if num_fire >=5 and rel_time == False:
+                    last_time = timer()
+                    rel_time = True
+
+
 
     
     if not finish: 
@@ -102,6 +120,33 @@ while run:
         ufos.draw(window)
         bullets.update()
         bullets.draw(window)
+        
+        if rel_time == True:
+            now_time = timer()
+            if now_time - last_time < 1:
+                load = font1.render('restart', 1, (150, 0, 0))
+                window.blit(load, (250,450))
+            else:
+                num_fire = 0 
+                rel_time = False
+
+
+
+        collides = sprite.groupcollide(ufos, bullets, True, True)
+
+        for c in collides:
+            score = score+1
+            ufo = Enemy(img_ufo, randint(80,620), -30, 80,50, randint(1,5))
+            ufos.add(ufo)
+        
+        if sprite.spritecollide(ship , ufos, False) or lost >= 1:
+            finish = True
+            window.blit(luse,(200, 200))
+
+        if score >= 15:
+            finish = True
+            window.blit(win,(200, 200))
+
 
         display.update()
     time.delay(40)
